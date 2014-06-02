@@ -17,7 +17,7 @@ namespace Finite_element_method
 
         double c11 = 0;
         double c12 = 1;
-        double c13 = 2;
+        double c13 = 0;
 
         double c21 = 1;
         double c22 = 0;
@@ -25,6 +25,7 @@ namespace Finite_element_method
 
         double left = 1;
         double right = Math.Pow(Math.E, Math.PI);
+
         double h;
 
         double find_p(double x)
@@ -44,76 +45,92 @@ namespace Finite_element_method
 
         double find_f(double x)
         {
-            return 0;
+            return -10.0 / x + (8 * Math.Pow(Math.E, Math.PI)) / (x * x);
         }
 
-
-        public double sigma(int t, int l)
+        public double integral(int from_i_to_i1, int type)
         {
-            double sigm;
-            double x, xn, xk, h1;
+            double result;
+            double x, xn, xk, dx;
             int i;
             int n1 = 1000;
-            xn = left + t * h;
-            xk = left + (t + 1) * h;
-            h1 = h / n1;
-            x = xn + h1 / 2;
-            if (t <= 0)
+            xn = left + from_i_to_i1 * h;               //предел интегрирования x(i-1)
+            xk = left + (from_i_to_i1 + 1) * h;         //предел интегрирования x(i)
+            dx = h / n1;
+            x = xn + dx / 2;
+            if (from_i_to_i1 <= 0)
                 return 0;
-            sigm = 0;
-            if (l == 1)
+            result = 0;
+            if (type == 1)
             {
                 for (i = 0; i < n1; i++)
                 {
-                    sigm = sigm + left/ x;
-                    x = x + h1;
+                    result += find_p(x);
+                    x = x + dx;
                 }
-                sigm = sigm * h1;
-                return sigm;
+                result = result * dx;
+                return result;
             }
-            sigm = 0;
-            if (l == 4)
+            if (type == 4)
             {
                 for (i = 0; i < n1; i++)
                 {
-                    sigm = sigm - 4 * left* x * (x - xn) * (xk - x);
-                    x = x + h1;
+                    result += find_q(x) * (x - xn) * (xk - x);
+                    x = x + dx;
                 }
-                sigm = sigm * h1;
-                return sigm;
+                result = result * dx;
+                return result;
             }
-            sigm = 0;
-            if (l == 2)
+            if (type == 2)
             {
                 for (i = 0; i < n1; i++)
                 {
-                    sigm = sigm - 4 * left* x * Math.Pow((x - xn), 2);
-                    x = x + h1;
+                    result += find_q(x) * Math.Pow((x - xn), 2);
+                    x = x + dx;
                 }
-                sigm = sigm * h1;
-                return sigm;
+                result = result * dx;
+                return result;
             }
-            sigm = 0;
-            if (l == 3)
+            if (type == 3)
             {
                 for (i = 0; i < n1; i++)
                 {
-                    sigm = sigm - 4 * left* x * Math.Pow((xk - x), 2);
-                    x = x + h1;
+                    result += find_q(x) * Math.Pow((xk - x), 2);
+                    x = x + dx;
                 }
-                sigm = sigm * h1;
-                return sigm;
+                result = result * dx;
+                return result;
             }
-            return 0.0;
+            if (type == 5)
+            {
+                for (i = 0; i < n1; i++)
+                {
+                    result += (x - xn) * find_f(x);
+                    x = x + dx;
+                }
+                result = result * dx;
+                return result;
+            }
+            if (type == 6)
+            {
+                for (i = 0; i < n1; i++)
+                {
+                    result += (xk - x) * find_f(x);
+                    x = x + dx;
+                }
+                result = result * dx;
+                return result;
+            }
+            return result;
         }
 
         public void algoritm(int n, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
         {
             double[] x, y, f, p, q, r;
-            double[] a, b, c;
+            double[] a, b, c, fmk;
             double[] alpha, beta;
             double kapa1, kapa2, mu1, mu2;
-           
+
             int i;
 
             x = new double[n + 1];
@@ -126,6 +143,7 @@ namespace Finite_element_method
             a = new double[n + 1];
             b = new double[n + 1];
             c = new double[n + 1];
+            fmk = new double[n + 1];  //коэфициент для МКЭ
 
             alpha = new double[n + 1];
             beta = new double[n + 1];
@@ -142,9 +160,10 @@ namespace Finite_element_method
                 q[i] = find_q(x[i]);
                 r[i] = find_r(x[i]);
 
-                a[i] = (-1) * k * sigma(i - 1, 1) + k * sigma(i - 1, 4);
-                b[i] = k * sigma(i, 1) + k * sigma(i - 1, 1) + k * sigma(i, 2) + k * sigma(i - 1, 3);
-                c[i] = (-1) * k * sigma(i, 1) + k * sigma(i, 4);
+                a[i] = (-1) * k * integral(i - 1, 1) + k * integral(i - 1, 4);
+                b[i] = k * integral(i, 1) + k * integral(i - 1, 1) + k * integral(i, 2) + k * integral(i, 3);
+                c[i] = (-1) * k * integral(i, 1) + k * integral(i, 4);
+                fmk[i] = (1 / h) * integral(i - 1, 5) + (1 / h) * integral(i, 6);
             }
 
             kapa1 = (-c12 / h) / (c11 - c12 / h);
@@ -158,7 +177,7 @@ namespace Finite_element_method
             for (i = 1; i < n; i++)
             {
                 alpha[i + 1] = a[i] / (b[i] - c[i] * alpha[i]);
-                beta[i + 1] = (f[i] - c[i] * beta[i]) / (c[i] * alpha[i] - b[i]);
+                beta[i + 1] = (fmk[i] - c[i] * beta[i]) / (c[i] * alpha[i] - b[i]);
             }
 
             y[n] = (kapa2 * beta[n] + mu2) / (1 - kapa2 * alpha[n]);
@@ -212,10 +231,10 @@ namespace Finite_element_method
             StreamWriter fx1 = new System.IO.StreamWriter(@"" + path + "fx2.txt");
             StreamWriter fy1 = new System.IO.StreamWriter(@"" + path + "fy2.txt");
 
-            tdm.algoritm(40, fx, fy);
+            tdm.algoritm(400, fx, fy);
             fy.Close();
             fx.Close();
-            tdm.algoritm(80, fx1, fy1);
+            tdm.algoritm(200, fx1, fy1);
             fy1.Close();
             fx1.Close();
 
