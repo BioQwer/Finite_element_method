@@ -9,11 +9,11 @@ namespace Finite_element_method
 {
     class TDM
     {
-        // p(x)y'' + q(x)y' + r(x)y = f(x)
+        // p(x)result_system'' + q(x)result_system' + r(x)result_system = f(x)
 
-        // c11*y(a) + c12*y'(a) = c13
+        // c11*result_system(a) + c12*result_system'(a) = c13
 
-        // c21*y(b) + c22*y'(b) = c23
+        // c21*result_system(b) + c22*result_system'(b) = c23
 
         double c11 = 0;
         double c12 = 1;
@@ -124,9 +124,26 @@ namespace Finite_element_method
             return result;
         }
 
+        private double fi(int i, int x, double h)
+        {
+            double x_i = left + (i-1) * h;               
+            double xi = left + i * h;        
+            double xi1 = left + (i+1) * h;       
+            if (x_i<x||xi>x)
+                return 0;
+            else
+            {
+                if (x > x_i && x < xi)
+                    return (x - x_i) / h;
+                else
+                    return -(x - xi1) / h;
+            }
+        }
+
+
         public void algoritm(int n, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
         {
-            double[] x, y, f, p, q, r;
+            double[] x, result_system, f, p, q, r;
             double[] a, b, c, fmk;
             double[] alpha, beta;
             double kapa1, kapa2, mu1, mu2;
@@ -134,7 +151,7 @@ namespace Finite_element_method
             int i;
 
             x = new double[n + 1];
-            y = new double[n + 1];
+            result_system = new double[n + 1];  //решение прогонки
             f = new double[n + 1];
             p = new double[n + 1];
             q = new double[n + 1];
@@ -180,32 +197,32 @@ namespace Finite_element_method
                 beta[i + 1] = (fmk[i] - c[i] * beta[i]) / (c[i] * alpha[i] - b[i]);
             }
 
-            y[n] = (kapa2 * beta[n] + mu2) / (1 - kapa2 * alpha[n]);
+            result_system[n] = (kapa2 * beta[n] + mu2) / (1 - kapa2 * alpha[n]);
             for (i = n - 1; i > 0; i--)
             {
-                y[i] = (alpha[i + 1] * y[i + 1] + beta[i + 1]);
+                result_system[i] = (alpha[i + 1] * result_system[i + 1] + beta[i + 1]);
             }
-            y[0] = kapa1 * y[1] + mu1;
+            result_system[0] = kapa1 * result_system[1] + mu1;
 
             if (n == 80)
                 for (i = 0; i < n + 1; i = i + n / 20)
                 {
                     file_x.WriteLine(x[i]);
-                    file_y.WriteLine(y[i]);
+                    file_y.WriteLine(result_system[i]);
                 }
             else
                 for (i = 0; i < n + 1; i++)
                 {
                     file_x.WriteLine(x[i]);
-                    file_y.WriteLine(y[i]);
+                    file_y.WriteLine(result_system[i]);
                 }
-            printMass(x, y);
+            printMass(x, result_system);
         }
 
         void printMass(double[] m, double[] k)
         {
             int n = m.Length;
-            Console.WriteLine("x          y ");
+            Console.WriteLine("x          result_system ");
             for (int i = 0; i < n; i++)
                 Console.WriteLine("{0,10:F4}{1,10:F4}", m[i], k[i]);
             Console.WriteLine();
