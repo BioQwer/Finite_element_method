@@ -210,7 +210,7 @@ namespace Finite_element_method
                 y[i] = 0;
                 for(int j = 0; j < n; j++)
                 {
-                    y[i] += result_system[i] * fi(i, x[i], h);
+                    y[i] += result_system[j] * fi(j, x[j], h);
                 }
 
             }
