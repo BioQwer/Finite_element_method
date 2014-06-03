@@ -124,7 +124,7 @@ namespace Finite_element_method
             return result;
         }
 
-        private double fi(int i, int x, double h)
+        private double fi(int i, double x, double h)
         {
             double x_i = left + (i-1) * h;               
             double xi = left + i * h;        
@@ -143,7 +143,7 @@ namespace Finite_element_method
 
         public void algoritm(int n, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
         {
-            double[] x, result_system, f, p, q, r;
+            double[] x, result_system, f, p, q, r,y;
             double[] a, b, c, fmk;
             double[] alpha, beta;
             double kapa1, kapa2, mu1, mu2;
@@ -156,6 +156,7 @@ namespace Finite_element_method
             p = new double[n + 1];
             q = new double[n + 1];
             r = new double[n + 1];
+            y = new double[n + 1];
 
             a = new double[n + 1];
             b = new double[n + 1];
@@ -204,19 +205,29 @@ namespace Finite_element_method
             }
             result_system[0] = kapa1 * result_system[1] + mu1;
 
+            for (i = 0; i < n; i++)
+            {
+                y[i] = 0;
+                for(int j = 0; j < n; j++)
+                {
+                    y[i] += result_system[i] * fi(i, x[i], h);
+                }
+
+            }
+
             if (n == 80)
                 for (i = 0; i < n + 1; i = i + n / 20)
                 {
                     file_x.WriteLine(x[i]);
-                    file_y.WriteLine(result_system[i]);
+                    file_y.WriteLine(y[i]);
                 }
             else
                 for (i = 0; i < n + 1; i++)
                 {
                     file_x.WriteLine(x[i]);
-                    file_y.WriteLine(result_system[i]);
+                    file_y.WriteLine(y[i]);
                 }
-            printMass(x, result_system);
+            printMass(x, y);
         }
 
         void printMass(double[] m, double[] k)
