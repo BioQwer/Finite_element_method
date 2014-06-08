@@ -23,7 +23,7 @@ namespace Finite_element_method
         private void points()
         {
             string fxline,fyline;
-            int counter1 = -1, counter2 = -1;
+            int counter1 = 0, counter2 =0;
             chart1.Visible = true;
             chart1.Series["Series1"].Points.Clear();
             chart1.Series["Series2"].Points.Clear();

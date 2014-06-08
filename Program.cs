@@ -17,20 +17,20 @@ namespace Finite_element_method
 
         double c11 = 0;
         double c12 = -1;
-        double c13 = 4;
+        double c13 = -2;
 
         double c21 = 1;
-        double c22 = 1;
-        double c23 = 1;
+        double c22 = 0;
+        double c23 = 0;
 
-        double left = 0.5;
-        double right = 1.0;
+        double left = 1;
+        double right = Math.Pow(Math.E,Math.PI);
 
         double h;
 
         double find_p(double x)
         {
-            return 4*x*x;
+            return x;
         }
 
         double find_q(double x)
@@ -40,12 +40,12 @@ namespace Finite_element_method
 
         double find_r(double x)
         {
-            return 4*x*x*x;
+            return -4 /  x;
         }
 
         double find_f(double x)
         {
-            return 4*x*x;
+            return 0;
         }
 
         public double integral(int low_index_integrate, int type)
@@ -129,15 +129,19 @@ namespace Finite_element_method
             double x_i = left + (i - 1) * h;
             double xi = left + i * h;
             double xi1 = left + (i + 1) * h;
-            if (x_i < x || xi > x)
-                return 0;
+
+            if (Math.Abs(x - xi) > h)
+                return 0.0;
             else
             {
-                if (x > x_i && x < xi)
-                    return (x - x_i) / h;
-                else
-                    return -(x - xi1) / h;
-            }
+                if (x >= x_i && x <= xi)
+                    return 1 + (x - x_i) / h;
+
+                if ((x <= xi1 && x > xi))
+                
+                    return 1 - (x - xi1) / h;
+                else return 0.0;
+            } 
         }
 
         public void algoritm(int n_system, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
@@ -150,8 +154,8 @@ namespace Finite_element_method
 
             int i;
 
-            x = new double[n_system +1];
-            result_system = new double[n_system +1];  //решение прогонки
+            x = new double[n_system + 1];
+            result_system = new double[n_system + 1];  //решение прогонки
             f = new double[n_system + 1];
             p = new double[n_system + 1];
             q = new double[n_system + 1];
@@ -170,7 +174,7 @@ namespace Finite_element_method
 
             double k = 1 / Math.Pow(h, 2);   // =1/h^2 замена для упрощения
 
-            for (i = 0; i < n_system +1; i++)
+            for (i = 0; i < n_system + 1; i++)
             {
                 x[i] = left + i * h;
                 f[i] = find_f(x[i]);
@@ -179,76 +183,68 @@ namespace Finite_element_method
                 r[i] = find_r(x[i]);
 
                 a[i] = (-1) * k * integral(i - 1, 1) + k * integral(i - 1, 4);
-                b[i] = k * integral(i, 1) + k * integral(i - 1, 1) + k * integral(i-1, 2) + k * integral(i, 3);
+                b[i] = k * integral(i, 1) + k * integral(i - 1, 1) + k * integral(i - 1, 2) + k * integral(i, 3);
                 c[i] = (-1) * k * integral(i, 1) + k * integral(i, 4);
                 fmk[i] = (1 / h) * integral(i - 1, 5) + (1 / h) * integral(i, 6);
             }
 
             double k0 = -c[0] / (b[0] + c11 * p[0]);
-            double k1 = -a[n_system-1] / (b[n_system-1] + c21 * p[n_system-1]);
+            //double k1 = -a[n_system] / (b[n_system-2] - c21 * p[n_system]);
+            double k1 = 0;
 
-            double n0 = fmk[0] / (b[0] + c11 * p[0]);
-            double n1 = fmk[n_system - 1] / (b[n_system - 1] + c21 * p[n_system - 1]);
-
+            double n0 = (fmk[0] +p[0]*c13)/ (b[0] + c11 * p[0]);
+            ///double n1 = (fmk[n_system] +p[n_system]*c23) / (b[n_system-2] + c21 * p[n_system]);
+            double n1 = c23;
             alpha[1] = k0;
             beta[1] = n0;
 
-            for (i = 1; i < n_system-1; i++)
+            for (i = 1; i < n_system - 1; i++)
             {
-                alpha[i + 1] = - c[i]/(b[i]+a[i]*alpha[i]);
-                beta[i + 1] = (fmk[i] - a[i] * beta[i]) / (b[i] + alpha[i] *a[i]);
+                alpha[i + 1] = -c[i] / (b[i] + a[i] * alpha[i]);
+                beta[i + 1] = (fmk[i] - a[i] * beta[i]) / (b[i] + alpha[i] * a[i]);
             }
 
-            result_system[n_system] = (n1+k1*beta[n_system-1])/(1-k1*alpha[n_system-1]);
+            result_system[n_system] = (n1 + k1 * beta[n_system - 1]) / (1 - k1 * alpha[n_system - 1]);
             for (i = n_system - 1; i > 0; i--)
             {
                 result_system[i] = (alpha[i] * result_system[i + 1] + beta[i]);
             }
-            
-            for (i = 0; i < n_points; i++)
+            result_system[0] = k0 * result_system[1]+n0;
+
+            y[0] = 0;
+            for ( i = 0; i < n_system; i++)
             {
-                y[i] = 0;
                 for (int j = 0; j < n_system; j++)
                 {
-                    y[i] += result_system[j] * fi(j, left+i*h , h);
+                    y[j] += result_system[i] * fi(i, left + j * h, h);
                 }
             }
 
-            for (int j = 0; j < n_system; j++)
-            {
-                Console.WriteLine("alpha {0,5:F3}  betta {1,5:F3} result sys {2,5:F3}", alpha[j], beta[j], result_system[j]);
-            }
 
             if (n_system == 80)
-                for (i = 0; i < n_system ; i = i + n_system / 20)
+                for (i = 0; i < n_system; i = i + n_system / 20)
                 {
                     file_x.WriteLine(x[i]);
                     file_y.WriteLine(y[i]);
                 }
             else
-                for (i = 0; i < n_points ; i++)
+                for (i = 0; i < n_system; i++)
                 {
-                    file_x.WriteLine(left+i*h);
-                    file_y.WriteLine(y[i]);
+                    file_x.WriteLine(left + i * h);
+                    file_y.WriteLine(result_system[i]);
                 }
-            printMass(x, y);
+           
         }
 
         void printMass(double[] m, double[] k)
         {
             int n = m.Length;
             Console.WriteLine("x          result_system ");
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < n; i+=2)
                 Console.WriteLine("{0,10:F4}{1,10:F4}", m[i], k[i]);
             Console.WriteLine();
         }
 
-
-        //    void writeToFile(double* x, double n_system, FILE* f)
-        //    {
-        //        for (int i = 0; i < n_system; i++) fprintf(f, "%lf\n_system", x[i]);
-        //        fclose(f);
-        //    }
     }
 
     class Program
@@ -263,12 +259,12 @@ namespace Finite_element_method
             StreamWriter fx1 = new System.IO.StreamWriter(@"" + path + "fx2.txt");
             StreamWriter fy1 = new System.IO.StreamWriter(@"" + path + "fy2.txt");
 
-            tdm.algoritm(4,fx, fy);
+            tdm.algoritm(200, fx, fy);
             fy.Close();
             fx.Close();
-            tdm.algoritm(2, fx1, fy1);
-            fy1.Close();
-            fx1.Close();
+             tdm.algoritm(100, fx1, fy1);
+             fy1.Close();
+             fx1.Close();
 
             Graphics e = new Graphics();
             e.ShowDialog();
