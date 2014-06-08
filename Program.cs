@@ -184,11 +184,11 @@ namespace Finite_element_method
                 fmk[i] = (1 / h) * integral(i - 1, 5) + (1 / h) * integral(i, 6);
             }
 
-            double k0 = -c[0] / (b[0] + c12 * p[0]);
-            double k1 = -a[n_system-1] / (b[n_system-1] + c22 * p[n_system-1]);
+            double k0 = -c[0] / (b[0] + c11 * p[0]);
+            double k1 = -a[n_system-1] / (b[n_system-1] + c21 * p[n_system-1]);
 
-            double n0 = fmk[0] / (b[0] + c12 * p[0]);
-            double n1 = fmk[n_system - 1] / (b[n_system - 1] + c22 * p[n_system - 1]);
+            double n0 = fmk[0] / (b[0] + c11 * p[0]);
+            double n1 = fmk[n_system - 1] / (b[n_system - 1] + c21 * p[n_system - 1]);
 
             alpha[1] = k0;
             beta[1] = n0;
