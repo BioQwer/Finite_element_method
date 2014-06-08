@@ -20,7 +20,7 @@ namespace Finite_element_method
         double c13 = 4;
 
         double c21 = 1;
-        double c22 = 0;
+        double c22 = 1;
         double c23 = 1;
 
         double left = 0.5;
@@ -48,17 +48,17 @@ namespace Finite_element_method
             return 4*x*x;
         }
 
-        public double integral(int from_i_to_i1, int type)
+        public double integral(int low_index_integrate, int type)
         {
             double result;
             double x, xn, xk, dx;
             int i;
             int n1 = 1000;
-            xn = left + from_i_to_i1 * h;               //предел интегрирования x(i-1)
-            xk = left + (from_i_to_i1 + 1) * h;         //предел интегрирования x(i)
+            xn = left + low_index_integrate * h;               //предел интегрирования x(i-1)  x начало
+            xk = left + (low_index_integrate + 1) * h;         //предел интегрирования x(i)   x конец
             dx = h / n1;
             x = xn + dx / 2;
-            if (from_i_to_i1 <= 0)
+            if (low_index_integrate < 0)
                 return 0;
             result = 0;
             if (type == 1)
@@ -75,7 +75,7 @@ namespace Finite_element_method
             {
                 for (i = 0; i < n1; i++)
                 {
-                    result += find_q(x) * (x - xn) * (xk - x);
+                    result += find_r(x) * (x - xn) * (xk - x);
                     x = x + dx;
                 }
                 result = result * dx;
@@ -85,7 +85,7 @@ namespace Finite_element_method
             {
                 for (i = 0; i < n1; i++)
                 {
-                    result += find_q(x) * Math.Pow((x - xn), 2);
+                    result += find_r(x) * Math.Pow((x - xn), 2);
                     x = x + dx;
                 }
                 result = result * dx;
@@ -95,7 +95,7 @@ namespace Finite_element_method
             {
                 for (i = 0; i < n1; i++)
                 {
-                    result += find_q(x) * Math.Pow((xk - x), 2);
+                    result += find_r(x) * Math.Pow((xk - x), 2);
                     x = x + dx;
                 }
                 result = result * dx;
@@ -140,7 +140,6 @@ namespace Finite_element_method
             }
         }
 
-
         public void algoritm(int n_system, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
         {
             double[] x, result_system, f, p, q, r, y;
@@ -180,7 +179,7 @@ namespace Finite_element_method
                 r[i] = find_r(x[i]);
 
                 a[i] = (-1) * k * integral(i - 1, 1) + k * integral(i - 1, 4);
-                b[i] = k * integral(i, 1) + k * integral(i - 1, 1) + k * integral(i, 2) + k * integral(i, 3);
+                b[i] = k * integral(i, 1) + k * integral(i - 1, 1) + k * integral(i-1, 2) + k * integral(i, 3);
                 c[i] = (-1) * k * integral(i, 1) + k * integral(i, 4);
                 fmk[i] = (1 / h) * integral(i - 1, 5) + (1 / h) * integral(i, 6);
             }
@@ -205,8 +204,6 @@ namespace Finite_element_method
             {
                 result_system[i] = (alpha[i] * result_system[i + 1] + beta[i]);
             }
-
-            
             
             for (i = 0; i < n_points; i++)
             {
@@ -229,9 +226,9 @@ namespace Finite_element_method
                     file_y.WriteLine(y[i]);
                 }
             else
-                for (i = 0; i < n_system ; i++)
+                for (i = 0; i < n_points ; i++)
                 {
-                    file_x.WriteLine(x[i]);
+                    file_x.WriteLine(left+i*h);
                     file_y.WriteLine(y[i]);
                 }
             printMass(x, y);
