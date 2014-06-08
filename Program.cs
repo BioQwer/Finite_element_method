@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Finite_element_method
 {
-    class TDM
+    class FEM
     {
         // p(x)result_system'' + q(x)result_system' + r(x)result_system = f(x)
 
@@ -16,36 +16,36 @@ namespace Finite_element_method
         // c21*result_system(b) + c22*result_system'(b) = c23
 
         double c11 = 0;
-        double c12 = 1;
-        double c13 = 0;
+        double c12 = -1;
+        double c13 = 4;
 
         double c21 = 1;
         double c22 = 0;
-        double c23 = 0;
+        double c23 = 1;
 
-        double left = 1;
-        double right = Math.Pow(Math.E, Math.PI);
+        double left = 0.5;
+        double right = 1.0;
 
         double h;
 
         double find_p(double x)
         {
-            return 1;
+            return 4*x*x;
         }
 
         double find_q(double x)
         {
-            return 1 / x;
+            return 0;
         }
 
         double find_r(double x)
         {
-            return 4 / (x * x);
+            return 4*x*x*x;
         }
 
         double find_f(double x)
         {
-            return -10.0 / x + (8 * Math.Pow(Math.E, Math.PI)) / (x * x);
+            return 4*x*x;
         }
 
         public double integral(int from_i_to_i1, int type)
@@ -126,10 +126,10 @@ namespace Finite_element_method
 
         private double fi(int i, double x, double h)
         {
-            double x_i = left + (i-1) * h;               
-            double xi = left + i * h;        
-            double xi1 = left + (i+1) * h;       
-            if (x_i<x||xi>x)
+            double x_i = left + (i - 1) * h;
+            double xi = left + i * h;
+            double xi1 = left + (i + 1) * h;
+            if (x_i < x || xi > x)
                 return 0;
             else
             {
@@ -141,36 +141,37 @@ namespace Finite_element_method
         }
 
 
-        public void algoritm(int n, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
+        public void algoritm(int n_system, StreamWriter file_x, StreamWriter file_y) // tridiagonal matrix algorithm
         {
-            double[] x, result_system, f, p, q, r,y;
+            double[] x, result_system, f, p, q, r, y;
             double[] a, b, c, fmk;
             double[] alpha, beta;
-            double kapa1, kapa2, mu1, mu2;
+
+            int n_points = 1000;
 
             int i;
 
-            x = new double[n + 1];
-            result_system = new double[n + 1];  //решение прогонки
-            f = new double[n + 1];
-            p = new double[n + 1];
-            q = new double[n + 1];
-            r = new double[n + 1];
-            y = new double[n + 1];
+            x = new double[n_system +1];
+            result_system = new double[n_system +1];  //решение прогонки
+            f = new double[n_system + 1];
+            p = new double[n_system + 1];
+            q = new double[n_system + 1];
+            r = new double[n_system + 1];
+            y = new double[n_points + 1];
 
-            a = new double[n + 1];
-            b = new double[n + 1];
-            c = new double[n + 1];
-            fmk = new double[n + 1];  //коэфициент для МКЭ
+            a = new double[n_system + 1];
+            b = new double[n_system + 1];
+            c = new double[n_system + 1];
+            fmk = new double[n_system + 1];  //коэфициент для МКЭ
 
-            alpha = new double[n + 1];
-            beta = new double[n + 1];
+            alpha = new double[n_system + 1];
+            beta = new double[n_system + 1];
 
-            h = (right - left) / n;
+            h = (right - left) / n_system;
 
             double k = 1 / Math.Pow(h, 2);   // =1/h^2 замена для упрощения
 
-            for (i = 0; i < n + 1; i++)
+            for (i = 0; i < n_system +1; i++)
             {
                 x[i] = left + i * h;
                 f[i] = find_f(x[i]);
@@ -184,45 +185,51 @@ namespace Finite_element_method
                 fmk[i] = (1 / h) * integral(i - 1, 5) + (1 / h) * integral(i, 6);
             }
 
-            kapa1 = (-c12 / h) / (c11 - c12 / h);
-            kapa2 = (-c22 * h) / (c21 - c22 / h);
-            mu1 = c13 / (c11 - c12 / h);
-            mu2 = c23 / (c21 - c22 / h);
+            double k0 = -c[0] / (b[0] + c12 * p[0]);
+            double k1 = -a[n_system-1] / (b[n_system-1] + c22 * p[n_system-1]);
 
-            alpha[1] = kapa1;
-            beta[1] = mu1;
+            double n0 = fmk[0] / (b[0] + c12 * p[0]);
+            double n1 = fmk[n_system - 1] / (b[n_system - 1] + c22 * p[n_system - 1]);
 
-            for (i = 1; i < n; i++)
+            alpha[1] = k0;
+            beta[1] = n0;
+
+            for (i = 1; i < n_system-1; i++)
             {
-                alpha[i + 1] = a[i] / (b[i] - c[i] * alpha[i]);
-                beta[i + 1] = (fmk[i] - c[i] * beta[i]) / (c[i] * alpha[i] - b[i]);
+                alpha[i + 1] = - c[i]/(b[i]+a[i]*alpha[i]);
+                beta[i + 1] = (fmk[i] - a[i] * beta[i]) / (b[i] + alpha[i] *a[i]);
             }
 
-            result_system[n] = (kapa2 * beta[n] + mu2) / (1 - kapa2 * alpha[n]);
-            for (i = n - 1; i > 0; i--)
+            result_system[n_system] = (n1+k1*beta[n_system-1])/(1-k1*alpha[n_system-1]);
+            for (i = n_system - 1; i > 0; i--)
             {
-                result_system[i] = (alpha[i + 1] * result_system[i + 1] + beta[i + 1]);
+                result_system[i] = (alpha[i] * result_system[i + 1] + beta[i]);
             }
-            result_system[0] = kapa1 * result_system[1] + mu1;
 
-            for (i = 0; i < n; i++)
+            
+            
+            for (i = 0; i < n_points; i++)
             {
                 y[i] = 0;
-                for(int j = 0; j < n; j++)
+                for (int j = 0; j < n_system; j++)
                 {
-                    y[i] += result_system[j] * fi(j, x[j], h);
+                    y[i] += result_system[j] * fi(j, left+i*h , h);
                 }
-
             }
 
-            if (n == 80)
-                for (i = 0; i < n + 1; i = i + n / 20)
+            for (int j = 0; j < n_system; j++)
+            {
+                Console.WriteLine("alpha {0,5:F3}  betta {1,5:F3} result sys {2,5:F3}", alpha[j], beta[j], result_system[j]);
+            }
+
+            if (n_system == 80)
+                for (i = 0; i < n_system ; i = i + n_system / 20)
                 {
                     file_x.WriteLine(x[i]);
                     file_y.WriteLine(y[i]);
                 }
             else
-                for (i = 0; i < n + 1; i++)
+                for (i = 0; i < n_system ; i++)
                 {
                     file_x.WriteLine(x[i]);
                     file_y.WriteLine(y[i]);
@@ -240,9 +247,9 @@ namespace Finite_element_method
         }
 
 
-        //    void writeToFile(double* x, double n, FILE* f)
+        //    void writeToFile(double* x, double n_system, FILE* f)
         //    {
-        //        for (int i = 0; i < n; i++) fprintf(f, "%lf\n", x[i]);
+        //        for (int i = 0; i < n_system; i++) fprintf(f, "%lf\n_system", x[i]);
         //        fclose(f);
         //    }
     }
@@ -252,17 +259,17 @@ namespace Finite_element_method
 
         static void Main(string[] args)
         {
-            TDM tdm = new TDM();
-            string path = "F:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
+            FEM tdm = new FEM();
+            string path = "E:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
             StreamWriter fx = new System.IO.StreamWriter(@"" + path + "fx1.txt");
             StreamWriter fy = new System.IO.StreamWriter(@"" + path + "fy1.txt");
             StreamWriter fx1 = new System.IO.StreamWriter(@"" + path + "fx2.txt");
             StreamWriter fy1 = new System.IO.StreamWriter(@"" + path + "fy2.txt");
 
-            tdm.algoritm(400, fx, fy);
+            tdm.algoritm(4,fx, fy);
             fy.Close();
             fx.Close();
-            tdm.algoritm(200, fx1, fy1);
+            tdm.algoritm(2, fx1, fy1);
             fy1.Close();
             fx1.Close();
 

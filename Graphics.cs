@@ -27,7 +27,7 @@ namespace Finite_element_method
             chart1.Visible = true;
             chart1.Series["Series1"].Points.Clear();
             chart1.Series["Series2"].Points.Clear();
-            string path = "F:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
+            string path = "E:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
             StreamReader fx = new System.IO.StreamReader(@"" + path + "fx1.txt");
             StreamReader fy = new System.IO.StreamReader(@"" + path + "fy1.txt");
             StreamReader fx1 = new System.IO.StreamReader(@"" + path + "fx2.txt");
