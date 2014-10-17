@@ -23,11 +23,11 @@ namespace Finite_element_method
         private void points()
         {
             string fxline,fyline;
-            int counter1 = -1, counter2 = -1;
+            int counter1 = 0, counter2 =0;
             chart1.Visible = true;
             chart1.Series["Series1"].Points.Clear();
             chart1.Series["Series2"].Points.Clear();
-            string path = "F:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
+            string path = "E:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
             StreamReader fx = new System.IO.StreamReader(@"" + path + "fx1.txt");
             StreamReader fy = new System.IO.StreamReader(@"" + path + "fy1.txt");
             StreamReader fx1 = new System.IO.StreamReader(@"" + path + "fx2.txt");
