@@ -22,16 +22,15 @@ namespace Finite_element_method
 
         private void points()
         {
-            string fxline,fyline;
-            int counter1 = 0, counter2 =0;
+            string fxline, fyline;
+            int counter1 = 0, counter2 = 0;
             chart1.Visible = true;
             chart1.Series["Series1"].Points.Clear();
             chart1.Series["Series2"].Points.Clear();
-            string path = "E:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
-            StreamReader fx = new System.IO.StreamReader(@"" + path + "fx1.txt");
-            StreamReader fy = new System.IO.StreamReader(@"" + path + "fy1.txt");
-            StreamReader fx1 = new System.IO.StreamReader(@"" + path + "fx2.txt");
-            StreamReader fy1 = new System.IO.StreamReader(@"" + path + "fy2.txt");
+            StreamReader fx = new System.IO.StreamReader("fx1.txt");
+            StreamReader fy = new System.IO.StreamReader("fy1.txt");
+            StreamReader fx1 = new System.IO.StreamReader("fx2.txt");
+            StreamReader fy1 = new System.IO.StreamReader("fy2.txt");
             while (((fxline = fx.ReadLine()) != null) && ((fyline = fy.ReadLine()) != null))
             {
                 chart1.Series["Series1"].Points.AddXY(Convert.ToDouble(fxline), Convert.ToDouble(fyline));
@@ -46,8 +45,8 @@ namespace Finite_element_method
             fx.Close();
             fy1.Close();
             fx1.Close();
-            chart1.Series["Series1"].LegendText = "Приближение "+counter1.ToString();
-            chart1.Series["Series2"].LegendText = "Приближение "+counter2.ToString();
+            chart1.Series["Series1"].LegendText = "Приближение " + counter1.ToString();
+            chart1.Series["Series2"].LegendText = "Приближение " + counter2.ToString();
         }
 
     }
