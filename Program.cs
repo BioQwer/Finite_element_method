@@ -239,11 +239,10 @@ namespace Finite_element_method
         static void Main(string[] args)
         {
             FEM tdm = new FEM();
-            string path = "E:\\Dropbox\\Visual Studio\\Projects\\Finite_element_method\\";
-            StreamWriter fx = new System.IO.StreamWriter(@"" + path + "fx1.txt");
-            StreamWriter fy = new System.IO.StreamWriter(@"" + path + "fy1.txt");
-            StreamWriter fx1 = new System.IO.StreamWriter(@"" + path + "fx2.txt");
-            StreamWriter fy1 = new System.IO.StreamWriter(@"" + path + "fy2.txt");
+            StreamWriter fx = new System.IO.StreamWriter( "fx1.txt");
+            StreamWriter fy = new System.IO.StreamWriter( "fy1.txt");
+            StreamWriter fx1 = new System.IO.StreamWriter( "fx2.txt");
+            StreamWriter fy1 = new System.IO.StreamWriter( "fy2.txt");
 
             tdm.algoritm(50, fx, fy);
             fy.Close();
